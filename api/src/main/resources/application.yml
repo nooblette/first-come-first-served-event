@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    hibernate:
+      # create : 애플리케이션이 실행될 때 기존 테이블을 삭제하고 새로 생성
+      ddl-auto: create
+    # hibernate가 실행하는 SQL 쿼리를 콘솔에 출력하기 위함
+    show-sql: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/coupon_example
+    username: root
+    password: 1234
