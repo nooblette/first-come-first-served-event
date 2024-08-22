@@ -1,6 +1,7 @@
 package org.example.api.service;
 
 import org.example.api.domain.Coupon;
+import org.example.api.producer.CouponCreateProducer;
 import org.example.api.repository.CouponCountRepository;
 import org.example.api.repository.CouponRepository;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 public class ApplyService {
 	private final CouponRepository couponRepository;
 	private final CouponCountRepository couponCountRepository;
+	private final CouponCreateProducer couponCreateProducer;
 
 	// 쿠폰 발급 로직
 	public void apply(Long userId) {
@@ -29,6 +31,9 @@ public class ApplyService {
 		}
 
 		// 발급이 가능한 경우 ->  쿠폰 새로 생성(발급)
-		couponRepository.save(new Coupon(userId));
+		// couponRepository.save(new Coupon(userId)); // 쿠폰 발급(mysql)
+
+		// 쿠폰을 직접 DB에 생성하지 않고 카프카 토픽에 userId를 전송한다.
+		couponCreateProducer.create(userId);
 	}
 }
