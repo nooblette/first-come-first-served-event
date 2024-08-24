@@ -58,6 +58,9 @@ class ApplyServiceTest {
 		// await() 이후 로직은 count 값이 0이 되고 나서 실행된다.
 		latch.await();
 
+		// 컨슈머가 메시지를 처리하는 동안 잠시 대기
+		Thread.sleep(10000);
+
 		// 100개의 쿠폰이 생성된 것을 예상
 		long count = couponRepository.count();
 		assertThat(count).isEqualTo(100);
