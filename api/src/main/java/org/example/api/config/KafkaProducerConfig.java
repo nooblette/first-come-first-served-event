@@ -23,7 +23,11 @@ public class KafkaProducerConfig {
 		Map<String, Object> config = new HashMap<>();
 
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+
+		// 메시지 키로 “user123” 과 같은 문자열을 사용한다.
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+
+		// 메시지 값으로 1L, 2L, 3L과 같은 Long 타입을 사용한다.
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
 
 		return new DefaultKafkaProducerFactory<>(config);
