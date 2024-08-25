@@ -1,7 +1,7 @@
 package org.example.api.service;
 
-import org.example.api.domain.Coupon;
 import org.example.api.producer.CouponCreateProducer;
+import org.example.api.repository.AppliedUserRepository;
 import org.example.api.repository.CouponCountRepository;
 import org.example.api.repository.CouponRepository;
 import org.springframework.stereotype.Service;
@@ -15,9 +15,19 @@ public class ApplyService {
 	private final CouponRepository couponRepository;
 	private final CouponCountRepository couponCountRepository;
 	private final CouponCreateProducer couponCreateProducer;
+	private final AppliedUserRepository applieduserRepository;
 
 	// 쿠폰 발급 로직
 	public void apply(Long userId) {
+		// 쿠폰을 발급받은 사용자인지  검증
+		Long apply = applieduserRepository.add(userId);
+
+		// 이미 쿠폰을 발급받은 사용자라면 쿠폰 미발급
+		if(apply != 1) {
+			return;
+		}
+
+		// 쿠폰발급 로직 수행
 		// 쿠폰 개수 조회(mysql)
 		// long count = couponRepository.count();
 
