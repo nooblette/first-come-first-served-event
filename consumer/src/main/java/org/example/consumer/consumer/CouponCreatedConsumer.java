@@ -1,23 +1,33 @@
 package org.example.consumer.consumer;
 
 import org.example.consumer.domain.Coupon;
+import org.example.consumer.domain.FailedEvent;
 import org.example.consumer.repository.CouponRepository;
+import org.example.consumer.repository.FailedEventRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j // 에러 로깅을 위함
 @Component
+@RequiredArgsConstructor
 public class CouponCreatedConsumer {
 	private final CouponRepository couponRepository;
-
-	public CouponCreatedConsumer(CouponRepository couponRepository) {
-		this.couponRepository = couponRepository;
-	}
+	private final FailedEventRepository failedEventRepository;
 
 	@KafkaListener(
 		topics = "coupon-create", 	// 토픽 명 지정
 		groupId = "group_1" 		// 컨슈머 그룹 ID 지정
 	)
 	public void listener(Long userId) {
-		couponRepository.save(new Coupon(userId));
+		try {
+			couponRepository.save(new Coupon(userId));
+		} catch (Exception e) {
+			// 쿠폰 발급에 실패하는 경우
+			log.error("failed to create coupon: {}", userId);
+			failedEventRepository.save(new FailedEvent(userId));
+		}
 	}
 }
