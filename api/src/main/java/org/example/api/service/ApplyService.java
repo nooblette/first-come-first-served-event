@@ -1,5 +1,6 @@
 package org.example.api.service;
 
+import org.example.api.domain.Coupon;
 import org.example.api.producer.CouponCreateProducer;
 import org.example.api.repository.AppliedUserRepository;
 import org.example.api.repository.CouponCountRepository;
@@ -41,9 +42,9 @@ public class ApplyService {
 		}
 
 		// 발급이 가능한 경우 ->  쿠폰 새로 생성(발급)
-		// couponRepository.save(new Coupon(userId)); // 쿠폰 발급(mysql)
+		couponRepository.save(new Coupon(userId)); // 쿠폰 발급(mysql)
 
 		// 쿠폰을 직접 DB에 생성하지 않고 카프카 토픽에 userId를 전송한다.
-		couponCreateProducer.create(userId);
+		// couponCreateProducer.create(userId);
 	}
 }
