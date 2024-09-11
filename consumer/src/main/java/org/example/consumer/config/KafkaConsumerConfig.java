@@ -4,13 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.LongDeserializer;
+import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.CommonErrorHandler;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 public class KafkaConsumerConfig {
@@ -40,6 +50,35 @@ public class KafkaConsumerConfig {
 		// 앞서 세팅한 설정 값을 담는 consuemerFactory를 설정해준다.
 		factory.setConsumerFactory(consumerFactory());
 
+		// 에러 핸들러 지정
+		factory.setCommonErrorHandler(couponErrorHandler());
+
 		return factory;
+	}
+
+	// DLT(Dead Letter Topic)에 발행할 메시지 템플릿
+	@Bean
+	public KafkaTemplate<String, Long> kafkaTemplate(ProducerFactory<String, Long> producerFactory) {
+		return new KafkaTemplate<>(producerFactory);
+	}
+
+	// DLT(Dead Letter Topic)에 메시지 발행시 사용할 Producer 설정 세팅
+	@Bean
+	public ProducerFactory<String, Long> producerFactory() {
+		Map<String, Object> config = new HashMap<>();
+		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+		return new DefaultKafkaProducerFactory<>(config);
+	}
+
+	// 에러 핸들러 구현
+	@Bean
+	public CommonErrorHandler couponErrorHandler() {
+		DeadLetterPublishingRecoverer recover = new DeadLetterPublishingRecoverer(kafkaTemplate(producerFactory()));
+
+		// 1초(1000MS) 간격으로 2회 재시도
+		FixedBackOff fixedBackOff = new FixedBackOff(1000L, 2L);
+		return new DefaultErrorHandler(recover, fixedBackOff);
 	}
 }
